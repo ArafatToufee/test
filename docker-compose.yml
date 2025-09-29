@@ -1,0 +1,268 @@
+version: '3.8'
+
+services:
+  # 数据库服务
+  mysql:
+    image: mysql:8.0
+    container_name: ecommerce-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ecommerce_root_password
+      MYSQL_DATABASE: ecommerce_db
+      MYSQL_USER: ecommerce_user
+      MYSQL_PASSWORD: ecommerce_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ecommerce-network
+
+  # Redis缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ecommerce-network
+
+  # 认证服务
+  auth-service:
+    build:
+      context: ./services/auth-service/auth-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-auth-service
+    ports:
+      - "5001:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql://ecommerce_user:ecommerce_password@mysql:3306/ecommerce_db
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # 商品服务
+  product-service:
+    build:
+      context: ./services/product-service/product-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-product-service
+    ports:
+      - "5002:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql://ecommerce_user:ecommerce_password@mysql:3306/ecommerce_db
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # 购物车服务
+  cart-service:
+    build:
+      context: ./services/cart-service/cart-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-cart-service
+    ports:
+      - "5003:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql://ecommerce_user:ecommerce_password@mysql:3306/ecommerce_db
+      - REDIS_URL=redis://redis:6379/2
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # 订单服务
+  order-service:
+    build:
+      context: ./services/order-service/order-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-order-service
+    ports:
+      - "5004:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql://ecommerce_user:ecommerce_password@mysql:3306/ecommerce_db
+      - REDIS_URL=redis://redis:6379/3
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # 支付服务
+  payment-service:
+    build:
+      context: ./services/payment-service/payment-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-payment-service
+    ports:
+      - "5005:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql://ecommerce_user:ecommerce_password@mysql:3306/ecommerce_db
+      - REDIS_URL=redis://redis:6379/4
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # AI推荐服务
+  recommendation-service:
+    build:
+      context: ./ai-services/recommendation-service/recommendation-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-recommendation-service
+    ports:
+      - "5006:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql://ecommerce_user:ecommerce_password@mysql:3306/ecommerce_db
+      - REDIS_URL=redis://redis:6379/5
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # 视觉搜索服务
+  visual-search-service:
+    build:
+      context: ./ai-services/visual-search-service/visual-search-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-visual-search-service
+    ports:
+      - "5007:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql://ecommerce_user:ecommerce_password@mysql:3306/ecommerce_db
+      - REDIS_URL=redis://redis:6379/6
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # 欺诈检测服务
+  fraud-detection-service:
+    build:
+      context: ./ai-services/fraud-detection-service/fraud-detection-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-fraud-detection-service
+    ports:
+      - "5008:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql://ecommerce_user:ecommerce_password@mysql:3306/ecommerce_db
+      - REDIS_URL=redis://redis:6379/7
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # 语音助手服务
+  voice-assistant-service:
+    build:
+      context: ./ai-services/voice-assistant-service/voice-assistant-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-voice-assistant-service
+    ports:
+      - "5009:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql://ecommerce_user:ecommerce_password@mysql:3306/ecommerce_db
+      - REDIS_URL=redis://redis:6379/8
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # 动态定价服务
+  dynamic-pricing-service:
+    build:
+      context: ./ai-services/dynamic-pricing-service/dynamic-pricing-service
+      dockerfile: Dockerfile
+    container_name: ecommerce-dynamic-pricing-service
+    ports:
+      - "5010:5000"
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql://ecommerce_user:ecommerce_password@mysql:3306/ecommerce_db
+      - REDIS_URL=redis://redis:6379/9
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # API网关
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: ecommerce-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - AUTH_SERVICE_URL=http://auth-service:5000
+      - PRODUCT_SERVICE_URL=http://product-service:5000
+      - CART_SERVICE_URL=http://cart-service:5000
+      - ORDER_SERVICE_URL=http://order-service:5000
+      - PAYMENT_SERVICE_URL=http://payment-service:5000
+      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:5000
+      - VISUAL_SEARCH_SERVICE_URL=http://visual-search-service:5000
+      - FRAUD_DETECTION_SERVICE_URL=http://fraud-detection-service:5000
+      - VOICE_ASSISTANT_SERVICE_URL=http://voice-assistant-service:5000
+      - DYNAMIC_PRICING_SERVICE_URL=http://dynamic-pricing-service:5000
+    depends_on:
+      - auth-service
+      - product-service
+      - cart-service
+      - order-service
+      - payment-service
+      - recommendation-service
+      - visual-search-service
+      - fraud-detection-service
+      - voice-assistant-service
+      - dynamic-pricing-service
+    networks:
+      - ecommerce-network
+
+  # 前端应用
+  frontend:
+    build:
+      context: ./frontend/ecommerce-frontend
+      dockerfile: Dockerfile
+    container_name: ecommerce-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_BASE_URL=http://localhost:8080
+    depends_on:
+      - api-gateway
+    networks:
+      - ecommerce-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge
+
+
